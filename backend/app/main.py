@@ -15,7 +15,7 @@ app = FastAPI(title=settings.app_name)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[str(settings.frontend_url)],
+    allow_origins=settings.cors_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,6 +23,15 @@ app.add_middleware(
 
 settings.upload_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
+
+
+def clean_validation_errors(errors: list[dict]) -> list[dict[str, str]]:
+    cleaned = []
+    for error in errors:
+        loc = error.get("loc", [])
+        field = ".".join(str(part) for part in loc if part not in {"body", "query", "path"})
+        cleaned.append({"field": field or "request", "message": str(error.get("msg", "Invalid value"))})
+    return cleaned
 
 
 @app.exception_handler(HTTPException)
@@ -42,12 +51,12 @@ async def sqlalchemy_exception_handler(_: Request, exc: SQLAlchemyError) -> JSON
 
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(_: Request, exc: ValidationError) -> JSONResponse:
-    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+    return JSONResponse(status_code=422, content={"detail": clean_validation_errors(exc.errors())})
 
 
 @app.exception_handler(RequestValidationError)
 async def request_validation_exception_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
-    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+    return JSONResponse(status_code=422, content={"detail": clean_validation_errors(exc.errors())})
 
 
 @app.get("/health", tags=["health"])

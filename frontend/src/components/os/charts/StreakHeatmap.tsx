@@ -37,9 +37,15 @@ export function StreakHeatmap() {
         ))}
       </div>
       <div className="mt-2 flex items-center justify-end gap-1 text-[10px] text-muted-foreground">
-        less {[0, 1, 2, 3, 4].map((v) => (
-          <span key={v} className="h-2.5 w-2.5 rounded-[2px]" style={{ backgroundColor: colorFor(v) }} />
-        ))} more
+        less{" "}
+        {[0, 1, 2, 3, 4].map((v) => (
+          <span
+            key={v}
+            className="h-2.5 w-2.5 rounded-[2px]"
+            style={{ backgroundColor: colorFor(v) }}
+          />
+        ))}{" "}
+        more
       </div>
     </div>
   );

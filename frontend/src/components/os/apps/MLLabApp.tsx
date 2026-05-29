@@ -1,9 +1,33 @@
 export function MLLabApp() {
   const experiments = [
-    { name: "heart-disease-xgb", dataset: "UCI Heart (303)", metric: "ROC-AUC", value: 0.921, progress: 100 },
-    { name: "titanic-stack", dataset: "Kaggle Titanic (891)", metric: "Accuracy", value: 0.834, progress: 100 },
-    { name: "calorie-burn-gbr", dataset: "Calories (15k)", metric: "MAE", value: 4.21, progress: 100 },
-    { name: "phishing-url-bert", dataset: "PhishTank (180k)", metric: "F1", value: 0.967, progress: 72 },
+    {
+      name: "heart-disease-xgb",
+      dataset: "UCI Heart (303)",
+      metric: "ROC-AUC",
+      value: 0.921,
+      progress: 100,
+    },
+    {
+      name: "titanic-stack",
+      dataset: "Kaggle Titanic (891)",
+      metric: "Accuracy",
+      value: 0.834,
+      progress: 100,
+    },
+    {
+      name: "calorie-burn-gbr",
+      dataset: "Calories (15k)",
+      metric: "MAE",
+      value: 4.21,
+      progress: 100,
+    },
+    {
+      name: "phishing-url-bert",
+      dataset: "PhishTank (180k)",
+      metric: "F1",
+      value: 0.967,
+      progress: 72,
+    },
   ];
   return (
     <div className="space-y-4 text-xs">

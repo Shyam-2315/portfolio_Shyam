@@ -37,10 +37,13 @@ export function CommandPalette({ apps, onOpen }: Props) {
 
   const filtered = useMemo(
     () => apps.filter((a) => a.label.toLowerCase().includes(q.toLowerCase())),
-    [apps, q]
+    [apps, q],
   );
 
-  const launch = (id: string) => { onOpen(id); setOpen(false); };
+  const launch = (id: string) => {
+    onOpen(id);
+    setOpen(false);
+  };
 
   return (
     <AnimatePresence>
@@ -65,16 +68,27 @@ export function CommandPalette({ apps, onOpen }: Props) {
               <input
                 ref={inputRef}
                 value={q}
-                onChange={(e) => { setQ(e.target.value); setIdx(0); }}
+                onChange={(e) => {
+                  setQ(e.target.value);
+                  setIdx(0);
+                }}
                 onKeyDown={(e) => {
-                  if (e.key === "ArrowDown") { e.preventDefault(); setIdx((i) => Math.min(i + 1, filtered.length - 1)); }
-                  if (e.key === "ArrowUp")   { e.preventDefault(); setIdx((i) => Math.max(i - 1, 0)); }
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setIdx((i) => Math.min(i + 1, filtered.length - 1));
+                  }
+                  if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setIdx((i) => Math.max(i - 1, 0));
+                  }
                   if (e.key === "Enter" && filtered[idx]) launch(filtered[idx].id);
                 }}
                 placeholder="Run command or launch module…"
                 className="w-full bg-transparent py-3 font-mono text-sm outline-none placeholder:text-muted-foreground"
               />
-              <kbd className="hidden rounded border border-border/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:block">ESC</kbd>
+              <kbd className="hidden rounded border border-border/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:block">
+                ESC
+              </kbd>
             </div>
             <ul className="max-h-72 overflow-auto p-1">
               {filtered.length === 0 && (
@@ -86,7 +100,9 @@ export function CommandPalette({ apps, onOpen }: Props) {
                     onMouseEnter={() => setIdx(i)}
                     onClick={() => launch(a.id)}
                     className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition ${
-                      i === idx ? "bg-cyan/15 text-foreground" : "text-foreground/80 hover:bg-white/5"
+                      i === idx
+                        ? "bg-cyan/15 text-foreground"
+                        : "text-foreground/80 hover:bg-white/5"
                     }`}
                   >
                     <span className="text-cyan">{a.icon}</span>

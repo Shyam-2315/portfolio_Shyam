@@ -15,7 +15,10 @@ export function HackOverlay() {
   const [pct, setPct] = useState(0);
 
   useEffect(() => {
-    const fn = () => { setActive(true); setPct(0); };
+    const fn = () => {
+      setActive(true);
+      setPct(0);
+    };
     window.addEventListener("neural:hack", fn);
     return () => window.removeEventListener("neural:hack", fn);
   }, []);
@@ -53,7 +56,10 @@ export function HackOverlay() {
             </div>
             <div className="mt-4 space-y-1 text-foreground/85">
               {targets.slice(0, Math.ceil(pct / 25)).map((t) => (
-                <div key={t}>{">"} probing <span className="text-cyan">{t}</span> … <span className="text-emerald-300">[ok]</span></div>
+                <div key={t}>
+                  {">"} probing <span className="text-cyan">{t}</span> …{" "}
+                  <span className="text-emerald-300">[ok]</span>
+                </div>
               ))}
             </div>
             <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/5">

@@ -6,11 +6,16 @@ export function createLovableAiGatewayProvider(lovableApiKey: string, initialRun
   let runId = initialRunId?.trim() || undefined;
   let resolveRunId: (v: string | undefined) => void = () => {};
   let resolved = false;
-  const ready = new Promise<string | undefined>((r) => { resolveRunId = r; });
+  const ready = new Promise<string | undefined>((r) => {
+    resolveRunId = r;
+  });
   const publish = (v?: string) => {
     const next = v?.trim() || undefined;
     if (!runId && next) runId = next;
-    if (!resolved) { resolved = true; resolveRunId(runId); }
+    if (!resolved) {
+      resolved = true;
+      resolveRunId(runId);
+    }
   };
   if (runId) publish(runId);
 

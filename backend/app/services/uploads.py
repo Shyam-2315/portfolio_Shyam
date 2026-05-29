@@ -27,15 +27,22 @@ EXTENSIONS = {
 
 def save_upload(file: UploadFile, category: str) -> tuple[str, str]:
     settings = get_settings()
+    if category not in ALLOWED_TYPES:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported upload category")
+
     content_type = file.content_type or ""
     if content_type not in ALLOWED_TYPES[category]:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported file type")
+        allowed = ", ".join(sorted(ALLOWED_TYPES[category]))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported file type. Allowed types: {allowed}")
 
     upload_root = Path(settings.upload_dir)
     target_dir = upload_root / category
     target_dir.mkdir(parents=True, exist_ok=True)
 
     suffix = EXTENSIONS.get(content_type) or Path(file.filename or "").suffix
+    if not suffix:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uploaded file must include a supported extension")
+
     filename = f"{uuid4().hex}{suffix}"
     destination = target_dir / filename
 

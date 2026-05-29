@@ -9,12 +9,15 @@ export function CursorTrail() {
     if (window.matchMedia("(pointer: coarse)").matches) return;
     document.body.style.cursor = "none";
 
-    let mx = -100, my = -100;
-    let rx = -100, ry = -100;
+    let mx = -100,
+      my = -100;
+    let rx = -100,
+      ry = -100;
     let raf = 0;
 
     const onMove = (e: MouseEvent) => {
-      mx = e.clientX; my = e.clientY;
+      mx = e.clientX;
+      my = e.clientY;
       if (dotRef.current) {
         dotRef.current.style.transform = `translate3d(${mx - 3}px, ${my - 3}px, 0)`;
       }
@@ -59,7 +62,10 @@ export function CursorTrail() {
         ref={ringRef}
         aria-hidden
         className="pointer-events-none fixed left-0 top-0 z-[300] h-8 w-8 rounded-full border border-cyan/70 transition-[scale,opacity] duration-150"
-        style={{ boxShadow: "0 0 18px oklch(0.82 0.16 200 / 0.7), inset 0 0 8px oklch(0.82 0.16 200 / 0.35)" }}
+        style={{
+          boxShadow:
+            "0 0 18px oklch(0.82 0.16 200 / 0.7), inset 0 0 8px oklch(0.82 0.16 200 / 0.35)",
+        }}
       />
       <div
         ref={dotRef}

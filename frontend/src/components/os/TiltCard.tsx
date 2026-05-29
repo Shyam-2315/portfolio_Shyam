@@ -1,7 +1,13 @@
 import { useRef, type MouseEvent, type ReactNode } from "react";
 
 /** 3D cursor-tilt wrapper for cards. */
-export function TiltCard({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function TiltCard({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
 
   function onMove(e: MouseEvent<HTMLDivElement>) {
@@ -34,7 +40,8 @@ export function TiltCard({ children, className = "" }: { children: ReactNode; cl
         aria-hidden
         className="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition group-hover:opacity-100"
         style={{
-          background: "radial-gradient(280px circle at var(--mx) var(--my), oklch(0.82 0.16 200 / 0.18), transparent 60%)",
+          background:
+            "radial-gradient(280px circle at var(--mx) var(--my), oklch(0.82 0.16 200 / 0.18), transparent 60%)",
         }}
       />
     </div>

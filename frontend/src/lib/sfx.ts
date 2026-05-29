@@ -4,7 +4,9 @@ let ctx: AudioContext | null = null;
 function ac(): AudioContext | null {
   if (typeof window === "undefined") return null;
   if (!ctx) {
-    const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const Ctor =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     ctx = Ctor ? new Ctor() : null;
   }
   return ctx;
@@ -27,8 +29,12 @@ function blip(freq: number, dur = 0.08, type: OscillatorType = "sine", gain = 0.
 }
 
 let muted = false;
-export function setSfxMuted(m: boolean) { muted = m; }
-export function isSfxMuted() { return muted; }
+export function setSfxMuted(m: boolean) {
+  muted = m;
+}
+export function isSfxMuted() {
+  return muted;
+}
 
 export const sfx = {
   key: () => !muted && blip(1200 + Math.random() * 400, 0.04, "square", 0.012),
@@ -41,7 +47,7 @@ export const sfx = {
   boot: () => {
     if (muted) return;
     [220, 330, 440, 660, 880].forEach((f, i) =>
-      setTimeout(() => blip(f, 0.12, "sine", 0.04), i * 110)
+      setTimeout(() => blip(f, 0.12, "sine", 0.04), i * 110),
     );
   },
   alert: () => !muted && blip(880, 0.18, "sawtooth", 0.05),

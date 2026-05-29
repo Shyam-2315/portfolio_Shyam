@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440
     frontend_url: AnyHttpUrl | str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:8080,http://127.0.0.1:5173,http://127.0.0.1:8080"
     upload_dir: Path = Path("uploads")
     max_upload_size_mb: int = 10
     admin_email: str | None = None
@@ -23,6 +24,12 @@ class Settings(BaseSettings):
     @property
     def max_upload_size_bytes(self) -> int:
         return self.max_upload_size_mb * 1024 * 1024
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        origins = [str(self.frontend_url)]
+        origins.extend(origin.strip() for origin in self.cors_origins.split(",") if origin.strip())
+        return list(dict.fromkeys(origins))
 
 
 @lru_cache

@@ -49,9 +49,7 @@ export function AppWindow({ spec, index, zIndex, onClose, onFocus }: Props) {
         dragConstraints={constraintsRef}
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={
-          maximized || mobile
-            ? { opacity: 1, scale: 1, y: 0, x: 0 }
-            : { opacity: 1, scale: 1 }
+          maximized || mobile ? { opacity: 1, scale: 1, y: 0, x: 0 } : { opacity: 1, scale: 1 }
         }
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
         transition={{ type: "spring", stiffness: 260, damping: 26 }}
@@ -80,7 +78,9 @@ export function AppWindow({ spec, index, zIndex, onClose, onFocus }: Props) {
           </div>
           <div className="flex items-center gap-1.5">
             <button
-              onClick={() => {/* minimize -> close for now */ onClose();}}
+              onClick={() => {
+                /* minimize -> close for now */ onClose();
+              }}
               className="grid h-6 w-6 place-items-center rounded-md text-muted-foreground hover:bg-white/5 hover:text-foreground"
               aria-label="Minimize"
             >
@@ -104,20 +104,33 @@ export function AppWindow({ spec, index, zIndex, onClose, onFocus }: Props) {
         </div>
 
         {/* Body */}
-        <div className="relative h-[calc(100%-2.5rem)] overflow-auto p-5">
-          {spec.content}
-        </div>
+        <div className="relative h-[calc(100%-2.5rem)] overflow-auto p-5">{spec.content}</div>
 
         {/* HUD corner brackets */}
-        <span aria-hidden className="pointer-events-none absolute left-1 top-1 h-3 w-3 border-l border-t border-cyan/70" />
-        <span aria-hidden className="pointer-events-none absolute right-1 top-1 h-3 w-3 border-r border-t border-cyan/70" />
-        <span aria-hidden className="pointer-events-none absolute left-1 bottom-1 h-3 w-3 border-l border-b border-cyan/70" />
-        <span aria-hidden className="pointer-events-none absolute right-1 bottom-1 h-3 w-3 border-r border-b border-cyan/70" />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute left-1 top-1 h-3 w-3 border-l border-t border-cyan/70"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute right-1 top-1 h-3 w-3 border-r border-t border-cyan/70"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute left-1 bottom-1 h-3 w-3 border-l border-b border-cyan/70"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute right-1 bottom-1 h-3 w-3 border-r border-b border-cyan/70"
+        />
         {/* holographic sweep */}
         <span
           aria-hidden
           className="pointer-events-none absolute inset-x-0 top-0 h-px"
-          style={{ background: "linear-gradient(90deg, transparent, oklch(0.82 0.16 200 / 0.8), transparent)" }}
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, oklch(0.82 0.16 200 / 0.8), transparent)",
+          }}
         />
       </motion.div>
     </>

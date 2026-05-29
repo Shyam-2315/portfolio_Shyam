@@ -1,8 +1,18 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence } from "framer-motion";
 import {
-  User, Layers, FileText, ShieldAlert, FlaskConical, Target,
-  BookOpen, Sigma, BadgeCheck, GitBranch, TerminalSquare, Mail,
+  User,
+  Layers,
+  FileText,
+  ShieldAlert,
+  FlaskConical,
+  Target,
+  BookOpen,
+  Sigma,
+  BadgeCheck,
+  GitBranch,
+  TerminalSquare,
+  Mail,
 } from "lucide-react";
 import { NeuralBackground } from "./NeuralBackground";
 import { NeuralGlobe } from "./NeuralGlobe";
@@ -34,7 +44,16 @@ import { ContactApp } from "./apps/ContactApp";
 
 const ICON = "h-5 w-5";
 
-type Registry = Record<string, { label: string; icon: ReactNode; content: (open: (id: string) => void) => ReactNode; width?: number; height?: number }>;
+type Registry = Record<
+  string,
+  {
+    label: string;
+    icon: ReactNode;
+    content: (open: (id: string) => void) => ReactNode;
+    width?: number;
+    height?: number;
+  }
+>;
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(false);
@@ -70,24 +89,77 @@ export function Desktop() {
     });
   }, []);
 
-  const registry: Registry = useMemo(() => ({
-    about:        { label: "About",         icon: <User className={ICON} />,         content: () => <AboutApp /> },
-    projects:     { label: "Projects",      icon: <Layers className={ICON} />,       content: () => <ProjectsApp />,    width: 780, height: 540 },
-    pdfcraft:     { label: "PDFCraft",      icon: <FileText className={ICON} />,     content: () => <PDFCraftApp />,    width: 760, height: 540 },
-    soc:          { label: "AI-SOC-Agent",  icon: <ShieldAlert className={ICON} />,  content: () => <SOCApp />,         width: 780, height: 560 },
-    ml:           { label: "ML Lab",        icon: <FlaskConical className={ICON} />, content: () => <MLLabApp /> },
-    gate:         { label: "GATE Nexus",    icon: <Target className={ICON} />,       content: () => <GateNexusApp />,   width: 720, height: 560 },
-    notes:        { label: "Notes Vault",   icon: <BookOpen className={ICON} />,     content: () => <NotesApp />,       width: 720, height: 480 },
-    formulas:     { label: "Formula Vault", icon: <Sigma className={ICON} />,        content: () => <FormulasApp />,    width: 720, height: 480 },
-    certs:        { label: "Certifications",icon: <BadgeCheck className={ICON} />,   content: () => <CertificationsApp /> },
-    arch:         { label: "Architecture",  icon: <GitBranch className={ICON} />,    content: () => <ArchitectureApp /> },
-    terminal:     { label: "Neural Terminal", icon: <TerminalSquare className={ICON} />, content: (openFn) => <TerminalApp onOpen={openFn} />, width: 680, height: 440 },
-    contact:      { label: "Contact",       icon: <Mail className={ICON} />,         content: () => <ContactApp /> },
-  }), []);
+  const registry: Registry = useMemo(
+    () => ({
+      about: { label: "About", icon: <User className={ICON} />, content: () => <AboutApp /> },
+      projects: {
+        label: "Projects",
+        icon: <Layers className={ICON} />,
+        content: () => <ProjectsApp />,
+        width: 780,
+        height: 540,
+      },
+      pdfcraft: {
+        label: "PDFCraft",
+        icon: <FileText className={ICON} />,
+        content: () => <PDFCraftApp />,
+        width: 760,
+        height: 540,
+      },
+      soc: {
+        label: "AI-SOC-Agent",
+        icon: <ShieldAlert className={ICON} />,
+        content: () => <SOCApp />,
+        width: 780,
+        height: 560,
+      },
+      ml: { label: "ML Lab", icon: <FlaskConical className={ICON} />, content: () => <MLLabApp /> },
+      gate: {
+        label: "GATE Nexus",
+        icon: <Target className={ICON} />,
+        content: () => <GateNexusApp />,
+        width: 720,
+        height: 560,
+      },
+      notes: {
+        label: "Notes Vault",
+        icon: <BookOpen className={ICON} />,
+        content: () => <NotesApp />,
+        width: 720,
+        height: 480,
+      },
+      formulas: {
+        label: "Formula Vault",
+        icon: <Sigma className={ICON} />,
+        content: () => <FormulasApp />,
+        width: 720,
+        height: 480,
+      },
+      certs: {
+        label: "Certifications",
+        icon: <BadgeCheck className={ICON} />,
+        content: () => <CertificationsApp />,
+      },
+      arch: {
+        label: "Architecture",
+        icon: <GitBranch className={ICON} />,
+        content: () => <ArchitectureApp />,
+      },
+      terminal: {
+        label: "Neural Terminal",
+        icon: <TerminalSquare className={ICON} />,
+        content: (openFn) => <TerminalApp onOpen={openFn} />,
+        width: 680,
+        height: 440,
+      },
+      contact: { label: "Contact", icon: <Mail className={ICON} />, content: () => <ContactApp /> },
+    }),
+    [],
+  );
 
   const dockApps: DockApp[] = useMemo(
     () => Object.entries(registry).map(([id, v]) => ({ id, label: v.label, icon: v.icon })),
-    [registry]
+    [registry],
   );
 
   const windows: WindowSpec[] = openOrder.map((id) => ({

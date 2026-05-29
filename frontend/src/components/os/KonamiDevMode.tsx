@@ -3,9 +3,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Code2 } from "lucide-react";
 
 const KONAMI = [
-  "ArrowUp","ArrowUp","ArrowDown","ArrowDown",
-  "ArrowLeft","ArrowRight","ArrowLeft","ArrowRight",
-  "b","a",
+  "ArrowUp",
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowLeft",
+  "ArrowRight",
+  "b",
+  "a",
 ];
 
 /** Konami code unlocks a hidden DEV MODE overlay. */
@@ -53,8 +60,13 @@ export function KonamiDevMode() {
             </p>
             <ul className="mt-3 space-y-1.5 text-foreground/85">
               <li>⌘K — instant command palette</li>
-              <li>type <span className="text-cyan">sudo hack pentagon</span> in the terminal</li>
-              <li>type <span className="text-cyan">whoami</span> as a hidden user — try "ghost", "root", "shyam"</li>
+              <li>
+                type <span className="text-cyan">sudo hack pentagon</span> in the terminal
+              </li>
+              <li>
+                type <span className="text-cyan">whoami</span> as a hidden user — try "ghost",
+                "root", "shyam"
+              </li>
               <li>chat with JARVIS — it actually thinks now (Lovable AI · Gemini)</li>
             </ul>
             <button

@@ -55,7 +55,7 @@ export function ProjectsApp() {
               ))}
             </div>
             <div className="mt-3 flex items-center justify-between">
-              <RepoStars id={p.id} />
+              <RepoStars id={p.id} repoUrl={p.github} />
               <span className="font-mono text-[10px] text-cyan">open module →</span>
             </div>
           </Link>
@@ -81,13 +81,14 @@ function Message({ children, action }: { children: React.ReactNode; action?: () 
   );
 }
 
-function RepoStars({ id }: { id: string }) {
+function RepoStars({ id, repoUrl }: { id: string; repoUrl?: string }) {
   const fn = useServerFn(getGitHubRepo);
   const { data } = useQuery({
-    queryKey: ["gh-repo", id],
-    queryFn: () => fn({ data: { repo: id } }),
+    queryKey: ["gh-repo", id, repoUrl],
+    queryFn: () => fn({ data: { repoUrl } }),
     staleTime: 5 * 60 * 1000,
     retry: false,
+    enabled: Boolean(repoUrl),
   });
   if (!data || data.stars === null || data.stars === undefined) {
     return <span className="font-mono text-[10px] text-muted-foreground">★ —</span>;

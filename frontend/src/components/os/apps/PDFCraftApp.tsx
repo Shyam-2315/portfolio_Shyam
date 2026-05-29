@@ -15,7 +15,10 @@ export function PDFCraftApp() {
     ];
     let i = 0;
     const id = setInterval(() => {
-      setLogs((l) => [...l.slice(-8), `${new Date().toLocaleTimeString()}  ${events[i % events.length]}`]);
+      setLogs((l) => [
+        ...l.slice(-8),
+        `${new Date().toLocaleTimeString()}  ${events[i % events.length]}`,
+      ]);
       i++;
     }, 900);
     return () => clearInterval(id);
@@ -46,16 +49,22 @@ export function PDFCraftApp() {
       </div>
 
       <div className="rounded-lg border border-border/60 bg-black/30 p-3 font-mono text-[11px] leading-relaxed">
-        <div className="mb-2 text-[10px] uppercase tracking-widest text-cyan">stream · /var/log/pdfcraft.audit</div>
+        <div className="mb-2 text-[10px] uppercase tracking-widest text-cyan">
+          stream · /var/log/pdfcraft.audit
+        </div>
         {logs.map((l, i) => (
-          <div key={i} className="text-foreground/80">{l}</div>
+          <div key={i} className="text-foreground/80">
+            {l}
+          </div>
         ))}
       </div>
 
       <div className="rounded-lg border border-border/60 bg-white/[0.02] p-4">
-        <div className="mb-3 text-[10px] uppercase tracking-widest text-muted-foreground">// architecture</div>
+        <div className="mb-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+          // architecture
+        </div>
         <pre className="overflow-x-auto text-[10px] leading-tight text-foreground/75">
-{`  Browser ─► CF Edge ─► API GW ─► FastAPI ─┬─► Redis (rate / cache)
+          {`  Browser ─► CF Edge ─► API GW ─► FastAPI ─┬─► Redis (rate / cache)
                                             ├─► Postgres (jobs, users)
                                             └─► Worker ─► PDF render`}
         </pre>

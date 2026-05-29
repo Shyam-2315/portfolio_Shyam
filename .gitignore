@@ -1,0 +1,34 @@
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+
+# Uploads
+uploads/
+backend/uploads/
+!backend/uploads/.gitkeep
+
+# Frontend
+node_modules/
+dist/
+frontend/node_modules/
+frontend/dist/
+frontend/.tanstack/
+frontend/.output/
+frontend/.vinxi/
+frontend/.nitro/
+
+# Logs and OS/editor files
+*.log
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json

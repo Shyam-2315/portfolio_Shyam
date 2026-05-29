@@ -9,7 +9,8 @@ export function NeuralBackground() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
     let raf = 0;
-    let w = 0, h = 0;
+    let w = 0,
+      h = 0;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     type N = { x: number; y: number; vx: number; vy: number };
@@ -35,15 +36,18 @@ export function NeuralBackground() {
     const loop = () => {
       ctx.clearRect(0, 0, w, h);
       for (const n of nodes) {
-        n.x += n.vx; n.y += n.vy;
+        n.x += n.vx;
+        n.y += n.vy;
         if (n.x < 0 || n.x > w) n.vx *= -1;
         if (n.y < 0 || n.y > h) n.vy *= -1;
       }
       // links
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i], b = nodes[j];
-          const dx = a.x - b.x, dy = a.y - b.y;
+          const a = nodes[i],
+            b = nodes[j];
+          const dx = a.x - b.x,
+            dy = a.y - b.y;
           const d2 = dx * dx + dy * dy;
           if (d2 < 140 * 140) {
             const alpha = 1 - Math.sqrt(d2) / 140;
@@ -66,7 +70,10 @@ export function NeuralBackground() {
       raf = requestAnimationFrame(loop);
     };
     loop();
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
   }, []);
 
   return (

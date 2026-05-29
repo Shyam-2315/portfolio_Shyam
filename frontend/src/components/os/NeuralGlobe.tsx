@@ -25,7 +25,7 @@ export function NeuralGlobe() {
     const geo = new THREE.IcosahedronGeometry(2, 3);
     const wire = new THREE.LineSegments(
       new THREE.WireframeGeometry(geo),
-      new THREE.LineBasicMaterial({ color: 0x6ee6ff, transparent: true, opacity: 0.35 })
+      new THREE.LineBasicMaterial({ color: 0x6ee6ff, transparent: true, opacity: 0.35 }),
     );
     scene.add(wire);
 
@@ -37,26 +37,32 @@ export function NeuralGlobe() {
       const phi = Math.acos(2 * Math.random() - 1);
       const theta = Math.random() * Math.PI * 2;
       const r = 2.4;
-      arr[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+      arr[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       arr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       arr[i * 3 + 2] = r * Math.cos(phi);
     }
     pts.setAttribute("position", new THREE.BufferAttribute(arr, 3));
     const nodes = new THREE.Points(
       pts,
-      new THREE.PointsMaterial({ color: 0xb084ff, size: 0.04, transparent: true, opacity: 0.85 })
+      new THREE.PointsMaterial({ color: 0xb084ff, size: 0.04, transparent: true, opacity: 0.85 }),
     );
     scene.add(nodes);
 
     // Inner low-poly core
     const core = new THREE.Mesh(
       new THREE.IcosahedronGeometry(1.1, 1),
-      new THREE.MeshBasicMaterial({ color: 0x6ee6ff, wireframe: true, transparent: true, opacity: 0.18 })
+      new THREE.MeshBasicMaterial({
+        color: 0x6ee6ff,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.18,
+      }),
     );
     scene.add(core);
 
     // mouse-influenced rotation
-    let mx = 0, my = 0;
+    let mx = 0,
+      my = 0;
     const onMove = (e: MouseEvent) => {
       mx = (e.clientX / window.innerWidth) * 2 - 1;
       my = (e.clientY / window.innerHeight) * 2 - 1;

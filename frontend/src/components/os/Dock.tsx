@@ -33,7 +33,9 @@ export function Dock({
               <span className="pointer-events-none absolute -top-7 hidden whitespace-nowrap rounded-md border border-border/60 bg-background/80 px-2 py-0.5 font-mono text-[10px] text-foreground group-hover:block">
                 {a.label}
               </span>
-              {open && <div className="absolute -bottom-0.5 h-0.5 w-5 rounded-full bg-cyan glow-cyan" />}
+              {open && (
+                <div className="absolute -bottom-0.5 h-0.5 w-5 rounded-full bg-cyan glow-cyan" />
+              )}
             </button>
           );
         })}
