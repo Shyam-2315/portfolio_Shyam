@@ -40,7 +40,9 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   const headers = new Headers(init.headers);
 
   if (!headers.has("Accept")) headers.set("Accept", "application/json");
-  if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  if (init.body && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   let response: Response;
@@ -66,4 +68,35 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
+}
+
+export function apiGet<T>(path: string) {
+  return apiFetch<T>(path);
+}
+
+export function apiPost<T>(path: string, body: unknown) {
+  return apiFetch<T>(path, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function apiPut<T>(path: string, body: unknown) {
+  return apiFetch<T>(path, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+export function apiDelete(path: string) {
+  return apiFetch<void>(path, { method: "DELETE" });
+}
+
+export function uploadFile<T>(path: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  return apiFetch<T>(path, {
+    method: "POST",
+    body: formData,
+  });
 }

@@ -101,6 +101,23 @@ def create_mock_test(payload: MockTestCreate, db: Session = Depends(get_db), _: 
     return mock_test
 
 
+@router.put("/mock-tests/{mock_test_id}", response_model=MockTestRead)
+def update_mock_test(mock_test_id: int, payload: MockTestCreate, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)):
+    mock_test = get_or_404(db, GateMockTest, mock_test_id)
+    apply_updates(mock_test, payload.model_dump())
+    db.commit()
+    db.refresh(mock_test)
+    return mock_test
+
+
+@router.delete("/mock-tests/{mock_test_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_mock_test(mock_test_id: int, db: Session = Depends(get_db), _: AdminUser = Depends(get_current_admin)) -> Response:
+    mock_test = get_or_404(db, GateMockTest, mock_test_id)
+    db.delete(mock_test)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.get("/mistakes", response_model=list[MistakeRead])
 def list_mistakes(db: Session = Depends(get_db)) -> list[GateMistake]:
     return list(db.scalars(select(GateMistake).order_by(GateMistake.created_at.desc())))
