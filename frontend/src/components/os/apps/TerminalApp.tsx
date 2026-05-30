@@ -60,8 +60,8 @@ export function TerminalApp({ onOpen }: Props) {
         return true;
       case "whoami":
         if (profileLoading) pushOut("loading profile from backend...");
-        else if (profileError || !profile)
-          pushOut("profile unavailable - backend offline or empty");
+        else if (profileError) pushOut("profile unavailable - backend offline or unreachable");
+        else if (!profile) pushOut("No profile added yet.");
         else pushOut(`${profile.name}${profile.role ? ` - ${profile.role}` : ""}`);
         return true;
       case "projects":

@@ -7,7 +7,7 @@ export function AboutApp() {
   if (isLoading) return <Message>loading profile...</Message>;
   if (isError)
     return <Message action={() => refetch()}>profile unavailable: {error.message}</Message>;
-  if (!profile) return <Message action={() => refetch()}>profile is empty.</Message>;
+  if (!profile) return <Message action={() => refetch()}>No profile added yet.</Message>;
 
   const initials = profile.name
     .split(/\s+/)

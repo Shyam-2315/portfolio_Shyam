@@ -19,18 +19,18 @@ export type Profile = {
 
 type ApiProfile = {
   id: number;
-  name: string;
-  role: string | null;
-  intro: string | null;
-  email: string | null;
-  linkedin_url: string | null;
-  github_url: string | null;
-  resume_url: string | null;
-  profile_image_url: string | null;
-  education: string | null;
-  location: string | null;
-  interests: string[];
-  skills: string[];
+  name: string | null;
+  role?: string | null;
+  intro?: string | null;
+  email?: string | null;
+  linkedin_url?: string | null;
+  github_url?: string | null;
+  resume_url?: string | null;
+  profile_image_url?: string | null;
+  education?: string | null;
+  location?: string | null;
+  interests?: string[] | null;
+  skills?: string[] | null;
 };
 
 const splitLines = (value: string | null) =>
@@ -41,7 +41,7 @@ const splitLines = (value: string | null) =>
 
 const mapProfile = (profile: ApiProfile): Profile => ({
   id: profile.id,
-  name: profile.name,
+  name: profile.name ?? "",
   role: profile.role ?? "",
   intro: profile.intro ?? "",
   email: profile.email ?? undefined,
@@ -49,15 +49,15 @@ const mapProfile = (profile: ApiProfile): Profile => ({
   githubUrl: profile.github_url ?? undefined,
   resumeUrl: resolveUploadUrl(profile.resume_url),
   profileImageUrl: resolveUploadUrl(profile.profile_image_url),
-  education: splitLines(profile.education),
+  education: splitLines(profile.education ?? null),
   location: profile.location ?? undefined,
-  interests: profile.interests,
-  skills: { skills: profile.skills },
+  interests: Array.isArray(profile.interests) ? profile.interests : [],
+  skills: { skills: Array.isArray(profile.skills) ? profile.skills : [] },
 });
 
 export async function fetchProfile() {
-  const profile = await apiFetch<ApiProfile>("/api/profile");
-  return mapProfile(profile);
+  const profile = await apiFetch<ApiProfile | null>("/api/profile");
+  return profile ? mapProfile(profile) : null;
 }
 
 export function useProfile() {
