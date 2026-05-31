@@ -135,6 +135,12 @@ def main() -> None:
             status, _ = request(method, path, body)
             assert_status(f"protected {method} {path} without token", status, {401, 403})
 
+        with tempfile.TemporaryDirectory() as tmp:
+            unauth_file = Path(tmp) / "unauth.png"
+            unauth_file.write_bytes(b"png")
+            status, _ = multipart_upload("/api/uploads/image", unauth_file, "image/png", "")
+            assert_status("unauthenticated upload rejected", status, {401, 403})
+
         for path in INVALID_ID_GETS:
             status, _ = request("GET", path)
             assert_status(f"invalid ID {path}", status, {404})
@@ -147,12 +153,29 @@ def main() -> None:
                 status, _ = multipart_upload("/api/uploads/image", bad_file, "application/x-msdownload", token)
                 assert_status("invalid image upload type", status, {400})
 
-                good_file = Path(tmp) / "note.txt"
-                good_file.write_text("smoke test note", encoding="utf-8")
+                oversized_image = Path(tmp) / "oversized.png"
+                oversized_image.write_bytes(b"0" * ((2 * 1024 * 1024) + 1))
+                status, _ = multipart_upload("/api/uploads/image", oversized_image, "image/png", token)
+                assert_status("oversized image upload rejected", status, {413})
+
+                profile_image = Path(tmp) / "profile.png"
+                profile_image.write_bytes(b"png")
+                status, body = multipart_upload("/api/uploads/image", profile_image, "image/png", token)
+                assert_status("valid profile image upload", status, {201})
+                if not isinstance(body, dict) or not str(body.get("file_url", "")).startswith("/uploads/images/"):
+                    raise AssertionError("valid profile image upload did not return expected file_url")
+
+                resume_image = Path(tmp) / "resume.png"
+                resume_image.write_bytes(b"png")
+                status, _ = multipart_upload("/api/uploads/resume", resume_image, "image/png", token)
+                assert_status("resume rejects non-PDF", status, {400})
+
+                good_file = Path(tmp) / "note.pdf"
+                good_file.write_bytes(b"%PDF-1.4 smoke test note")
                 status, _ = multipart_upload(
                     "/api/uploads/note",
                     good_file,
-                    mimetypes.guess_type(good_file.name)[0] or "text/plain",
+                    mimetypes.guess_type(good_file.name)[0] or "application/pdf",
                     token,
                 )
                 assert_status("valid note upload", status, {201})

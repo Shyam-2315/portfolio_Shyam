@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.config import get_settings
 from app.routes import auth, certifications, formulas, gate, notes, profile, projects, uploads
+from app.services.uploads import ensure_upload_folders
 
 settings = get_settings()
 
@@ -22,6 +23,7 @@ app.add_middleware(
 )
 
 settings.upload_dir.mkdir(parents=True, exist_ok=True)
+ensure_upload_folders()
 app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
 
 

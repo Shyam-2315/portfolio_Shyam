@@ -1,3 +1,5 @@
+import { resolveUploadUrl as resolveUploadUrlFromFiles, type UploadCategory } from "@/lib/files";
+
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
 
@@ -29,10 +31,7 @@ export function clearAuthToken() {
 }
 
 export function resolveUploadUrl(url?: string | null) {
-  if (!url) return undefined;
-  if (/^https?:\/\//i.test(url)) return url;
-  if (url.startsWith("/uploads/")) return `${API_BASE_URL}${url}`;
-  return url;
+  return resolveUploadUrlFromFiles(url);
 }
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -92,11 +91,30 @@ export function apiDelete(path: string) {
   return apiFetch<void>(path, { method: "DELETE" });
 }
 
-export function uploadFile<T>(path: string, file: File) {
+export type UploadResponse = {
+  file_url: string;
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+};
+
+export function uploadFile<T = UploadResponse>(category: UploadCategory, file: File) {
   const formData = new FormData();
   formData.append("file", file);
-  return apiFetch<T>(path, {
+  return apiFetch<T>(`/api/uploads/${category}`, {
     method: "POST",
     body: formData,
   });
+}
+
+export function updateProfile<T>(payload: unknown) {
+  return apiPut<T>("/api/profile", payload);
+}
+
+export function createProject<T>(payload: unknown) {
+  return apiPost<T>("/api/projects", payload);
+}
+
+export function updateProject<T>(id: string | number, payload: unknown) {
+  return apiPut<T>(`/api/projects/${id}`, payload);
 }

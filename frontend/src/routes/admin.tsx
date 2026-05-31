@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   Activity,
   Award,
@@ -14,10 +15,10 @@ import {
   Sigma,
   Target,
   Trash2,
-  Upload,
   User,
 } from "lucide-react";
-import { FormEvent, ReactNode, useMemo, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
+import { FilePreview, FileUpload } from "@/components/admin/FileUpload";
 import {
   apiDelete,
   apiGet,
@@ -25,10 +26,11 @@ import {
   apiPut,
   clearAuthToken,
   getAuthToken,
-  resolveUploadUrl,
   saveAuthToken,
-  uploadFile,
+  updateProfile,
+  type UploadResponse,
 } from "@/lib/api";
+import { resolveUploadUrl, type UploadCategory } from "@/lib/files";
 
 type JsonRecord = Record<string, unknown>;
 type FieldType =
@@ -41,7 +43,7 @@ type FieldType =
   | "list"
   | "checkbox"
   | "upload";
-type UploadKind = "image" | "note" | "resume";
+type UploadKind = UploadCategory;
 
 type Field = {
   key: string;
@@ -64,11 +66,6 @@ type ResourceConfig = {
   remove?: boolean;
 };
 
-type UploadResponse = {
-  file_url: string;
-  filename: string;
-};
-
 const resources: ResourceConfig[] = [
   {
     id: "profile",
@@ -84,7 +81,7 @@ const resources: ResourceConfig[] = [
       { key: "email", label: "Email", type: "email" },
       { key: "linkedin_url", label: "LinkedIn URL" },
       { key: "github_url", label: "GitHub URL" },
-      { key: "resume_url", label: "Resume URL", type: "upload", uploadKind: "resume" },
+      { key: "resume_url", label: "Resume", type: "upload", uploadKind: "resume" },
       { key: "profile_image_url", label: "Profile Image", type: "upload", uploadKind: "image" },
       { key: "education", label: "Education", type: "textarea" },
       { key: "location", label: "Location" },
@@ -108,12 +105,12 @@ const resources: ResourceConfig[] = [
       { key: "features", label: "Features", type: "list" },
       { key: "github_url", label: "GitHub URL" },
       { key: "live_url", label: "Live URL" },
-      { key: "screenshots", label: "Screenshots", type: "list" },
+      { key: "screenshots", label: "Screenshots", type: "upload", uploadKind: "project" },
       {
         key: "architecture_image_url",
         label: "Architecture Image",
         type: "upload",
-        uploadKind: "image",
+        uploadKind: "project",
       },
       { key: "display_order", label: "Display Order", type: "number" },
       { key: "is_featured", label: "Featured", type: "checkbox" },
@@ -132,7 +129,7 @@ const resources: ResourceConfig[] = [
       { key: "issue_date", label: "Issue Date", type: "date" },
       { key: "credential_id", label: "Credential ID" },
       { key: "verify_url", label: "Verify URL" },
-      { key: "image_url", label: "Certificate Image", type: "upload", uploadKind: "image" },
+      { key: "image_url", label: "Certificate Image", type: "upload", uploadKind: "certificate" },
     ],
     listTitle: (item) => String(item.title ?? "Untitled certification"),
     listMeta: (item) => String(item.issuer ?? ""),
@@ -429,17 +426,21 @@ function ResourcePanel({ config }: { config: ResourceConfig }) {
     mutationFn: (payload: JsonRecord) => apiPost(config.endpoint, payload),
     onSuccess: () => {
       setCreating(false);
+      toast.success(`${config.label} created.`);
       void queryClient.invalidateQueries({ queryKey });
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: (payload: JsonRecord) => {
-      const path = isSingleton ? config.endpoint : `${config.endpoint}/${String(payload.id)}`;
-      return apiPut(path, stripReadonly(payload));
+      const body = stripReadonly(payload);
+      return isSingleton
+        ? updateProfile(body)
+        : apiPut(`${config.endpoint}/${String(payload.id)}`, body);
     },
     onSuccess: () => {
       setEditing(null);
+      toast.success(`${config.label} saved.`);
       void queryClient.invalidateQueries({ queryKey });
       if (config.id === "profile") void queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
@@ -447,7 +448,10 @@ function ResourcePanel({ config }: { config: ResourceConfig }) {
 
   const deleteMutation = useMutation({
     mutationFn: (id: unknown) => apiDelete(`${config.endpoint}/${String(id)}`),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey }),
+    onSuccess: () => {
+      toast.success(`${config.label} deleted.`);
+      void queryClient.invalidateQueries({ queryKey });
+    },
   });
 
   const items = dataQuery.data ?? [];
@@ -483,6 +487,7 @@ function ResourcePanel({ config }: { config: ResourceConfig }) {
           submitLabel="save profile"
           busy={updateMutation.isPending}
           error={updateMutation.error?.message}
+          layout={config.id}
           onSubmit={(payload) => updateMutation.mutate({ ...selected, ...payload })}
         />
       )}
@@ -540,6 +545,7 @@ function ResourcePanel({ config }: { config: ResourceConfig }) {
                 submitLabel={`create ${config.label}`}
                 busy={createMutation.isPending}
                 error={createMutation.error?.message}
+                layout={config.id}
                 onCancel={() => setCreating(false)}
                 onSubmit={(payload) => createMutation.mutate(payload)}
               />
@@ -551,6 +557,7 @@ function ResourcePanel({ config }: { config: ResourceConfig }) {
                 submitLabel={`save ${config.label}`}
                 busy={updateMutation.isPending}
                 error={updateMutation.error?.message}
+                layout={config.id}
                 onCancel={() => setEditing(null)}
                 onSubmit={(payload) => updateMutation.mutate({ ...editing, ...payload })}
               />
@@ -571,6 +578,7 @@ function EditorForm({
   submitLabel,
   busy,
   error,
+  layout,
   onSubmit,
   onCancel,
 }: {
@@ -579,11 +587,27 @@ function EditorForm({
   submitLabel: string;
   busy: boolean;
   error?: string;
+  layout?: string;
   onSubmit: (payload: JsonRecord) => void;
   onCancel?: () => void;
 }) {
   const [values, setValues] = useState<JsonRecord>(() => normalizeInitial(fields, initial));
   const [validation, setValidation] = useState("");
+  const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
+  const initialValues = useMemo(() => normalizeInitial(fields, initial), [fields, initial]);
+  const dirty = useMemo(
+    () =>
+      JSON.stringify(buildPayload(fields, values)) !==
+      JSON.stringify(buildPayload(fields, initialValues)),
+    [fields, initialValues, values],
+  );
+  const hasUploadInFlight = Object.values(uploadingFields).some(Boolean);
+
+  useEffect(() => {
+    setValues(initialValues);
+    setValidation("");
+    setUploadingFields({});
+  }, [initialValues]);
 
   function setValue(key: string, value: unknown) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -591,6 +615,10 @@ function EditorForm({
 
   function submit(event: FormEvent) {
     event.preventDefault();
+    if (hasUploadInFlight) {
+      setValidation("Wait for uploads to finish before saving.");
+      return;
+    }
     const missing = fields.find(
       (field) => field.required && !String(values[field.key] ?? "").trim(),
     );
@@ -602,26 +630,50 @@ function EditorForm({
     onSubmit(buildPayload(fields, values));
   }
 
+  const fieldNode = (field: Field) => (
+    <AdminField
+      key={field.key}
+      field={field}
+      value={values[field.key]}
+      onChange={(value) => setValue(field.key, value)}
+      onUploadingChange={(uploading) =>
+        setUploadingFields((current) => ({ ...current, [field.key]: uploading }))
+      }
+    />
+  );
+
+  const content =
+    layout === "profile" ? (
+      <ProfileEditorSections fields={fields} renderField={fieldNode} />
+    ) : (
+      fields.map(fieldNode)
+    );
+
   return (
     <form onSubmit={submit} className="space-y-3">
-      <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">// editor</div>
-      {fields.map((field) => (
-        <AdminField
-          key={field.key}
-          field={field}
-          value={values[field.key]}
-          onChange={(value) => setValue(field.key, value)}
-        />
-      ))}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          // editor
+        </div>
+        {dirty ? (
+          <div className="rounded border border-amber-300/30 bg-amber-300/10 px-2 py-1 font-mono text-[11px] text-amber-100">
+            Unsaved changes
+          </div>
+        ) : null}
+      </div>
+      {content}
       {(validation || error) && (
         <div className="rounded-md border border-rose-400/40 bg-rose-400/10 p-2 text-xs text-rose-200">
           {validation || error}
         </div>
       )}
       <div className="flex flex-wrap gap-2 pt-2">
-        <button disabled={busy} className="admin-btn border-cyan/50 bg-cyan/10 text-cyan">
+        <button
+          disabled={busy || hasUploadInFlight || !dirty}
+          className="admin-btn border-cyan/50 bg-cyan/10 text-cyan disabled:opacity-50"
+        >
           <Save className="h-3.5 w-3.5" />
-          {busy ? "saving..." : submitLabel}
+          {busy ? "saving..." : hasUploadInFlight ? "uploading..." : submitLabel}
         </button>
         {onCancel && (
           <button
@@ -637,36 +689,56 @@ function EditorForm({
   );
 }
 
+function ProfileEditorSections({
+  fields,
+  renderField,
+}: {
+  fields: Field[];
+  renderField: (field: Field) => ReactNode;
+}) {
+  const byKey = new Map(fields.map((field) => [field.key, field]));
+  const sections = [
+    ["Basic Info", ["name", "role", "intro", "email", "location"]],
+    ["Links", ["linkedin_url", "github_url", "resume_url"]],
+    ["Profile Image", ["profile_image_url"]],
+    ["Education", ["education"]],
+    ["Skills & Interests", ["skills", "interests"]],
+  ] as const;
+  return (
+    <div className="grid gap-3 xl:grid-cols-2">
+      {sections.map(([title, keys]) => (
+        <section
+          key={title}
+          className="space-y-3 rounded-lg border border-border/60 bg-black/20 p-4"
+        >
+          <h2 className="font-mono text-xs uppercase tracking-widest text-cyan">{title}</h2>
+          {keys.map((key) => {
+            const field = byKey.get(key);
+            return field ? renderField(field) : null;
+          })}
+        </section>
+      ))}
+    </div>
+  );
+}
+
 function AdminField({
   field,
   value,
   onChange,
+  onUploadingChange,
 }: {
   field: Field;
   value: unknown;
   onChange: (value: unknown) => void;
+  onUploadingChange?: (uploading: boolean) => void;
 }) {
   const type = field.type ?? "text";
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState("");
   const stringValue = String(value ?? "");
-
-  async function upload(selected?: File) {
-    if (!selected || !field.uploadKind) return;
-    setUploading(true);
-    setUploadError("");
-    try {
-      const result = await uploadFile<UploadResponse>(`/api/uploads/${field.uploadKind}`, selected);
-      onChange(result.file_url);
-    } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Upload failed.");
-    } finally {
-      setUploading(false);
-    }
-  }
+  const urls = Array.isArray(value) ? value.filter(Boolean).map(String) : [];
 
   return (
-    <label className="block space-y-1">
+    <div className="block space-y-1">
       <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
         {field.label}
         {field.required ? " *" : ""}
@@ -676,7 +748,7 @@ function AdminField({
           value={stringValue}
           onChange={(event) => onChange(event.target.value)}
           rows={4}
-          className="admin-input resize-y"
+          className="admin-input min-h-28 resize-y"
         />
       )}
       {type === "list" && (
@@ -684,7 +756,7 @@ function AdminField({
           value={Array.isArray(value) ? value.join("\n") : stringValue}
           onChange={(event) => onChange(event.target.value)}
           rows={4}
-          className="admin-input resize-y"
+          className="admin-input min-h-28 resize-y"
           placeholder="one item per line"
         />
       )}
@@ -697,25 +769,39 @@ function AdminField({
         />
       )}
       {type === "upload" && (
-        <div className="space-y-2">
-          <input
-            value={stringValue}
-            onChange={(event) => onChange(event.target.value)}
-            className="admin-input"
-            placeholder="/uploads/file.png"
-          />
-          <div className="flex items-center gap-2">
-            <input
-              type="file"
-              onChange={(event) => void upload(event.target.files?.[0])}
-              className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded-md file:border file:border-cyan/40 file:bg-cyan/10 file:px-3 file:py-1 file:text-cyan"
-            />
-            {uploading && <span className="font-mono text-[11px] text-cyan">uploading...</span>}
-          </div>
-          {uploadError && <div className="text-xs text-rose-200">{uploadError}</div>}
-          {stringValue && <FilePreview url={stringValue} />}
-        </div>
+        <FileUpload
+          label={field.label}
+          category={field.uploadKind ?? "image"}
+          value={Array.isArray(value) ? null : stringValue}
+          onChange={(url) => {
+            if (Array.isArray(value)) onChange(url ? [...urls, url] : urls);
+            else onChange(url);
+          }}
+          onUploadingChange={onUploadingChange}
+          emptyText={
+            Array.isArray(value) && urls.length > 0 ? "Choose another file to upload." : undefined
+          }
+        />
       )}
+      {type === "upload" && Array.isArray(value) && urls.length > 0 ? (
+        <div className="space-y-2">
+          {urls.map((url, index) => (
+            <div
+              key={`${url}-${index}`}
+              className="flex items-center justify-between gap-2 rounded border border-border/60 bg-white/[0.02] p-2"
+            >
+              <FilePreview url={resolveUploadUrl(url)} name={url} />
+              <button
+                type="button"
+                onClick={() => onChange(urls.filter((_, itemIndex) => itemIndex !== index))}
+                className="admin-btn border-border/60 text-muted-foreground"
+              >
+                remove
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
       {!["textarea", "list", "checkbox", "upload"].includes(type) && (
         <input
           type={type}
@@ -724,7 +810,7 @@ function AdminField({
           className="admin-input"
         />
       )}
-    </label>
+    </div>
   );
 }
 
@@ -734,23 +820,9 @@ function UploadsPanel() {
     <div className="space-y-4">
       <PanelHeader title="Uploads" icon={<Image className="h-4 w-4" />} />
       <div className="grid gap-4 md:grid-cols-3">
-        <UploadCard
-          title="Images"
-          path="/api/uploads/image"
-          accept="image/*"
-          onUploaded={setLastUpload}
-        />
-        <UploadCard
-          title="Certificates / Notes"
-          path="/api/uploads/note"
-          onUploaded={setLastUpload}
-        />
-        <UploadCard
-          title="Resume"
-          path="/api/uploads/resume"
-          accept=".pdf,.doc,.docx"
-          onUploaded={setLastUpload}
-        />
+        <UploadCard title="Images" category="image" onUploaded={setLastUpload} />
+        <UploadCard title="Certificates / Notes" category="note" onUploaded={setLastUpload} />
+        <UploadCard title="Resume" category="resume" onUploaded={setLastUpload} />
       </div>
       {lastUpload && (
         <div className="rounded-lg border border-border/60 bg-white/[0.02] p-4">
@@ -767,35 +839,23 @@ function UploadsPanel() {
 
 function UploadCard({
   title,
-  path,
-  accept,
+  category,
   onUploaded,
 }: {
   title: string;
-  path: string;
-  accept?: string;
+  category: UploadCategory;
   onUploaded: (upload: UploadResponse) => void;
 }) {
-  const mutation = useMutation({
-    mutationFn: (file: File) => uploadFile<UploadResponse>(path, file),
-    onSuccess: onUploaded,
-  });
   return (
     <div className="rounded-lg border border-border/60 bg-black/30 p-4">
       <div className="font-medium text-foreground">{title}</div>
-      <input
-        type="file"
-        accept={accept}
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file) mutation.mutate(file);
-        }}
-        className="mt-3 block w-full text-xs text-muted-foreground file:mr-3 file:rounded-md file:border file:border-cyan/40 file:bg-cyan/10 file:px-3 file:py-1 file:text-cyan"
+      <FileUpload
+        label={title}
+        category={category}
+        value={null}
+        onChange={() => undefined}
+        onUploaded={onUploaded}
       />
-      {mutation.isPending && <div className="mt-2 text-xs text-cyan">uploading...</div>}
-      {mutation.isError && (
-        <div className="mt-2 text-xs text-rose-200">{mutation.error.message}</div>
-      )}
     </div>
   );
 }
@@ -813,11 +873,6 @@ function ResumePanel() {
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
   });
-  const upload = useMutation({
-    mutationFn: (file: File) => uploadFile<UploadResponse>("/api/uploads/resume", file),
-    onSuccess: (result) => update.mutate(result.file_url),
-  });
-
   return (
     <div className="space-y-4">
       <PanelHeader title="Resume" icon={<FileText className="h-4 w-4" />} />
@@ -838,51 +893,21 @@ function ResumePanel() {
               <FilePreview url={String(profile.data.resume_url)} />
             </div>
           ) : null}
-          <input
-            type="file"
-            accept=".pdf,.doc,.docx"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) upload.mutate(file);
+          <FileUpload
+            label="Resume"
+            category="resume"
+            value={String(profile.data.resume_url ?? "")}
+            onChange={(url) => {
+              if (url) update.mutate(url);
             }}
-            className="mt-4 block w-full text-xs text-muted-foreground file:mr-3 file:rounded-md file:border file:border-cyan/40 file:bg-cyan/10 file:px-3 file:py-1 file:text-cyan"
           />
-          {(upload.isPending || update.isPending) && (
-            <div className="mt-2 text-xs text-cyan">updating resume...</div>
-          )}
-          {(upload.isError || update.isError) && (
-            <div className="mt-2 text-xs text-rose-200">
-              {upload.error?.message || update.error?.message}
-            </div>
+          {update.isPending && <div className="mt-2 text-xs text-cyan">updating resume...</div>}
+          {update.isError && (
+            <div className="mt-2 text-xs text-rose-200">{update.error?.message}</div>
           )}
         </div>
       )}
     </div>
-  );
-}
-
-function FilePreview({ url }: { url: string }) {
-  const fullUrl = resolveUploadUrl(url) ?? url;
-  const isImage = /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(fullUrl);
-  if (isImage) {
-    return (
-      <img
-        src={fullUrl}
-        alt=""
-        className="max-h-44 rounded-md border border-border/60 object-contain"
-      />
-    );
-  }
-  return (
-    <a
-      href={fullUrl}
-      target="_blank"
-      rel="noreferrer"
-      className="inline-flex items-center gap-2 rounded-md border border-cyan/40 px-3 py-1.5 text-xs text-cyan"
-    >
-      <FileText className="h-3.5 w-3.5" />
-      preview file
-    </a>
   );
 }
 
